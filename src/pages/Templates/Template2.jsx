@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 
-import logo from "../../../assets/Images/logo.png";
+// import logo from "../../../assets/Images/logo.png";
 
 // Create styles
 const styles = StyleSheet.create({
@@ -53,24 +53,24 @@ const styles = StyleSheet.create({
   invoiceHeading: {
     display: "flex",
     flexDirection: "row",
-    justifyContent: "space-between",
+    // justifyContent: "",
     fontSize: 12,
-    backgroundColor: "black",
-    color: "white",
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginVertical: 10,
+    // backgroundColor: "black",
+    // color: "white",
+    // borderRadius: 10,
+    // paddingHorizontal: 10,
+    // paddingVertical: 5,
+    // marginVertical: 10,
   },
   invHeadingLeft: {
     display: "flex",
-    flexDirection: "row",
-    gap: 20,
+    flexDirection: "column",
+    // gap: 20,
   },
   invHeadingRight: {
     display: "flex",
-    flexDirection: "row",
-    gap: 20,
+    flexDirection: "column",
+    // gap: 20,
   },
   sec2Right: {
     display: "flex",
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
   itemRow: {
     display: "flex",
-    flexDirection: "row",
+    flexDirection: "column",
     justifyContent: "space-between",
     fontSize: 10,
     marginVertical: 5,
@@ -186,10 +186,6 @@ const Template2 = ({ data }) => {
           {/* Logo and Header */}
           <View style={styles.mainDiv}>
             <View style={styles.logoInvoicesub}>
-              <Image
-                src={data?.image}
-                style={{ height: 60, width: 90, marginBottom: 5 }}
-              />
               <Text style={{ fontSize: 20, marginVertical: 10 }}>INVOICE</Text>
             </View>
             <View>
@@ -207,14 +203,10 @@ const Template2 = ({ data }) => {
                   <Text style={{ fontSize: 10, color: "gray" }}>
                     Company Address:
                   </Text>
-                  <Text style={{ fontSize: 10, color: "gray" }}>Bill To:</Text>
-                  <Text style={{ fontSize: 10, color: "gray" }}>Ship To:</Text>
                 </View>
                 <View style={styles.sec2Left2}>
                   <Text style={{ fontSize: 10 }}>{data?.companyName}</Text>
                   <Text style={{ fontSize: 10 }}>{data?.addressFrom}</Text>
-                  <Text style={{ fontSize: 10 }}>{data?.billTo}</Text>
-                  <Text style={{ fontSize: 10 }}>{data?.shipTo}</Text>
                 </View>
               </View>
             </View>
@@ -222,13 +214,9 @@ const Template2 = ({ data }) => {
               <View style={styles.poDateRow}>
                 <View style={styles.poDateRow1}>
                   <Text style={{ fontSize: 10 }}>Date:</Text>
-                  <Text style={{ fontSize: 10 }}>Due Date:</Text>
-                  <Text style={{ fontSize: 10 }}>PO Number:</Text>
                 </View>
                 <View style={styles.poDateRow2}>
                   <Text style={{ fontSize: 10 }}>{data?.date}</Text>
-                  <Text style={{ fontSize: 10 }}>{data?.dueDate}</Text>
-                  <Text style={{ fontSize: 10 }}>{data?.poNumber}</Text>
                 </View>
               </View>
             </View>
@@ -271,8 +259,7 @@ const Template2 = ({ data }) => {
               <View style={styles.totalSubSec}>
                 <View style={styles.totalLeft}>
                   <Text>Subtotal:</Text>
-                  <Text>Discount:</Text>
-                  <Text>Tax:</Text>
+
                   <Text>Shipping:</Text>
                   <Text>Amount Paid:</Text>
                   <Text>Total:</Text>
@@ -280,8 +267,7 @@ const Template2 = ({ data }) => {
                 </View>
                 <View style={styles.totalRight}>
                   <Text>{data?.subtotal}</Text>
-                  <Text>{data?.discount}</Text>
-                  <Text>{data?.tax}</Text>
+
                   <Text>{data?.shipping}</Text>
                   <Text>{data?.amountPaid}</Text>
                   <Text>

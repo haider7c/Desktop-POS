@@ -56,7 +56,7 @@ const NavBar = () => {
             </div>
           )}
         </div>
-        <div className="hidden lg:flex flex-row gap-10">
+        {/* <div className="hidden lg:flex flex-row gap-10">
           <button onClick={() => navigate("/login")}>Sign In</button>
           <button
             className="bg-[#20b27a] py-2 px-3 rounded-lg text-white"
@@ -64,7 +64,7 @@ const NavBar = () => {
           >
             Sign Up
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

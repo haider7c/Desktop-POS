@@ -4,74 +4,68 @@ import { FaTimes } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { addFormData } from "../Redux/invoceReducer";
 import { useSelector } from "react-redux";
-// import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
-// import Template2 from "../Pages/invoice-builder/Templates/Template2";
+import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import Template2 from "../pages/Templates/Template2.jsx";
+import NavBar from "./NavBar.jsx";
+import Footer from "./Footer.jsx";
 const Form = () => {
   const { formDetails } = useSelector((state) => state.Invoice);
 
   const dispatch = useDispatch();
-  const [selectedImage, setSelectedImage] = useState(
-    localStorage.getItem("selectedImage") || null
-  );
+  // const [selectedImage, setSelectedImage] = useState(
+  //   localStorage.getItem("selectedImage") || null
+  // );
   const initialItems = JSON.parse(localStorage.getItem("items")) || [
-    { description: "", quantity: "1", rate: "0", amount: "0" },
+    {
+      description: "",
+      riceRate: "1",
+      safiWeight: "",
+      emptyBag: "",
+      quantity: "1",
+      weight: "",
+      kgWeight: "0",
+      unit: "",
+    },
   ];
 
   const [items, setItems] = useState(initialItems);
 
   const [notes, setNotes] = useState(formDetails.notes || "");
   const [terms, setTerms] = useState(formDetails.terms || "");
-  const [discount, setDiscount] = useState(formDetails.discount || "");
-  const [percentageDiscount, setPercentageDiscount] = useState(
-    formDetails.percentageDiscount || ""
+  // const [discount, setDiscount] = useState(formDetails.discount || "");
+  // const [percentageDiscount, setPercentageDiscount] = useState(
+  //   formDetails.percentageDiscount || ""
+  // );
+  const [vehicleReg, setvehicleReg] = useState(formDetails.vehicleReg || "");
+  const [labourPerBag, setLabourPerBag] = useState(
+    formDetails.labourPerBag || ""
   );
-  const [tax, setTax] = useState(formDetails.tax || "");
-  const [shipping, setShipping] = useState(formDetails.shipping || "");
+  const [transpAction, setTranspAction] = useState(
+    localStorage.getItem("transpAction") || "+"
+  ); // New state to track action (+ or -)
+  const [transpExp, settranspExp] = useState(formDetails.transpExp || "");
   const [amountPaid, setAmountPaid] = useState(formDetails.amountPaid || "");
-  const [currency, setCurrency] = useState("USD");
   const [serialNumb, setSerialNumb] = useState(formDetails.serialNumb || "");
-  const [addressFrom, setAddressFrom] = useState(formDetails.addressFrom || "");
   const [billTo, setBillTo] = useState(formDetails.billTo || "");
-  const [shipTo, setShipTo] = useState(formDetails.shipTo || "");
+  const [phone, setPhone] = useState(formDetails.phone || "");
   const [date, setDate] = useState(formDetails.date || "");
-  const [payTerms, setPayTerms] = useState(formDetails.payTerms || "");
-  const [dueDate, setDueDate] = useState(formDetails.dueDate || "");
-  const [poNumber, setPoNumber] = useState(formDetails.poNumber || "");
-  const [companyName, setCompanyName] = useState(formDetails.companyName || "");
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === "image/png") {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      alert("Please select a PNG image.");
-    }
-  };
-  //
   useEffect(() => {
     localStorage.setItem("items", JSON.stringify(items));
   }, [items]);
-  //
-
-  useEffect(() => {
-    if (selectedImage) {
-      localStorage.setItem("selectedImage", selectedImage);
-    }
-  }, [selectedImage]);
-  //
-
-  const handleImageDelete = () => {
-    setSelectedImage(null);
-  };
 
   const handleAddItem = () => {
     setItems([
       ...items,
-      { description: "", quantity: "1", rate: "0", amount: "0" },
+      {
+        description: "",
+        riceRate: "1",
+        safiWeight: "",
+        emptyBag: "",
+        quantity: "1",
+        weight: "",
+        kgWeight: "0",
+      },
     ]);
   };
 
@@ -84,28 +78,34 @@ const Form = () => {
     const newItems = [...items];
     newItems[index][name] = value;
 
-    if (name === "quantity" || name === "rate") {
+    if (name === "quantity" || name === "weight") {
       const quantity = parseFloat(newItems[index].quantity || 0);
-      const rate = parseFloat(newItems[index].rate || 0);
-      newItems[index].amount = (quantity * rate).toFixed(2);
+      const weight = parseFloat(newItems[index].weight || 0);
+
+      newItems[index].kgWeight = (quantity * weight).toFixed(2);
     }
 
     setItems(newItems);
   };
   const calculateSubtotal = () => {
-    return items.reduce(
-      (total, item) =>
-        total + parseFloat(item.quantity || "0") * parseFloat(item.rate || "0"),
-      0
-    );
-  };
+    // First, calculate the subtotal for all items
+    const total = items.reduce((acc, item) => {
+      const safiWeight =
+        parseFloat(item.kgWeight || "0") - parseFloat(item.emptyBag);
+      const unit = parseFloat(item.unit || "1"); // Default to 1 to avoid division by 0
+      const riceRate = parseFloat(item.riceRate || "0");
+      const quantity = parseFloat(item.quantity || "0");
 
-  const calculateTotalDiscount = () => {
-    const subtotal = calculateSubtotal();
-    const discountAmount = parseFloat(discount || "0");
-    const percentageDiscountAmount =
-      (parseFloat(percentageDiscount || "0") / 100) * subtotal;
-    return discountAmount + percentageDiscountAmount;
+      // Calculate the value for this item (safiWeight / unit) * riceRate
+      return acc + (safiWeight / unit) * riceRate + quantity * labourPerBag;
+    }, 0);
+
+    // Then subtract the transportation expense from the total
+    if (transpAction === "+") {
+      return total + parseFloat(transpExp || "0");
+    } else {
+      return total - parseFloat(transpExp || "0");
+    }
   };
 
   //REF FUNTION
@@ -124,82 +124,37 @@ const Form = () => {
   const handleDownload = (e) => {
     e.preventDefault();
     const subtotal = calculateSubtotal();
-    const totalDiscount = calculateTotalDiscount();
-    const total =
-      subtotal +
-      parseFloat(tax || "0") +
-      parseFloat(shipping || "0") -
-      totalDiscount;
+    const total = subtotal;
     const balanceDue = total - parseFloat(amountPaid || "0");
 
     const formValues = {
-      image: selectedImage,
       items: items,
       notes: notes,
       terms: terms,
-      discount: discount,
-      percentageDiscount: percentageDiscount,
-      tax: tax,
-      shipping: shipping,
+      labourPerBag: labourPerBag,
+      vehicleReg: vehicleReg,
+      transpExp: transpExp,
       amountPaid: amountPaid,
       subtotal: subtotal.toFixed(2),
       total: total.toFixed(2),
       balanceDue: balanceDue.toFixed(2),
-      currency: currency,
       serialNumb: serialNumb,
-      addressFrom: addressFrom,
       billTo: billTo,
-      shipTo: shipTo,
+      phone: phone,
       date: date,
-      payTerms: payTerms,
-      dueDate: dueDate,
-      poNumber: poNumber,
-      companyName: companyName,
     };
     dispatch(addFormData({ ...formValues }));
-    // console.log(formValues);
     handleClick();
   };
 
   return (
-    <div className="my-10 flex lg:flex-row flex-col justify-center md:mx-5">
-      <div className="flex flex-col border-2 px-3 md:px-10 md:py-10 w-full">
-        <form onSubmit={handleDownload}>
+    <div>
+      <NavBar />
+      <div className="h-auto flex lg:flex-row flex-col justify-center mt-10 ml-10">
+        <div className="flex flex-col border-2 px-3 md:px-10 md:py-10 w-full">
           <div className="flex md:flex-row flex-col justify-between">
             <div>
-              {selectedImage ? (
-                <div className="relative md:h-36 md:w-36 h-24 w-28">
-                  <img
-                    src={selectedImage}
-                    alt="Profile"
-                    className="shadow-md md:h-36 md:w-36 h-24 w-28"
-                  />
-                  <div className="bg-gray-700 hover:bg-[#20ad77] rounded-md absolute bottom-2 right-2 h-8 p-1 flex justify-center items-center">
-                    <MdDelete
-                      size={25}
-                      className=" hover:cursor-pointer text-white"
-                      onClick={handleImageDelete}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="md:h-36 md:w-36 h-24 w-28 bg-[#FAFAFA] hover:bg-[#edeaea] text-gray-600 flex items-center justify-center cursor-pointer"
-                  onClick={() => document.getElementById("imageInput").click()}
-                >
-                  Add your logo
-                  <input
-                    type="file"
-                    id="imageInput"
-                    accept="image/png"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </div>
-              )}
-            </div>
-            <div>
-              <p className="md:text-5xl text-2xl mt-5 md:mt-0">INVOICE</p>
+              <p className="md:text-5xl text-2xl mt-5 md:mt-0">Billing</p>
               <div className="rounded-md border-2 h-10 flex justify-start items-center mt-5">
                 <div className="bg-gray-100 h-full w-8 flex items-center justify-center">
                   #
@@ -216,28 +171,10 @@ const Form = () => {
 
           <div className="mt-5 flex md:flex-row flex-col justify-between">
             <div>
-              <div className=" flex md:flex-row flex-col gap-5">
-                <input
-                  required
-                  value={companyName}
-                  type="text"
-                  className=" rounded-md border-2 focus:outline-none focus:shadow-md h-14 md:w-52 w-full px-3"
-                  placeholder="Your Company Name?"
-                  onChange={(e) => setCompanyName(e.target.value)}
-                />
-                <input
-                  required
-                  value={addressFrom}
-                  type="text"
-                  className=" rounded-md border-2 focus:outline-none focus:shadow-md h-14 md:w-52 w-full px-3"
-                  placeholder="Who is this from?"
-                  onChange={(e) => setAddressFrom(e.target.value)}
-                />
-              </div>
               <div className="flex flex-row mt-5 gap-5">
                 <div className="flex flex-col w-1/2">
                   <label htmlFor="" className="ml-5">
-                    Bill To
+                    Name
                   </label>
                   <div className="h-14 md:w-52 mt-5">
                     <input
@@ -252,16 +189,16 @@ const Form = () => {
                 </div>
                 <div className="flex flex-col w-1/2">
                   <label htmlFor="" className="ml-5">
-                    Ship To
+                    Phone
                   </label>
                   <div className="h-14 md:w-52 mt-5">
                     <input
                       required
-                      value={shipTo}
-                      type="text"
+                      value={phone} // shipto to phone
+                      type="tel"
                       className=" rounded-md border-2 focus:outline-none focus:shadow-md h-full w-full px-3"
-                      placeholder="Ship to?"
-                      onChange={(e) => setShipTo(e.target.value)}
+                      placeholder="Phone Number"
+                      onChange={(e) => setPhone(e.target.value)}
                     />
                   </div>
                 </div>
@@ -280,7 +217,7 @@ const Form = () => {
                     />
                   </div>
                 </div>
-                <div className="flex md:flex-row flex-col md:items-center gap-5 w-1/2 md:w-max">
+                {/* <div className="flex md:flex-row flex-col md:items-center gap-5 w-1/2 md:w-max">
                   <label htmlFor="">Payment Terms</label>
                   <div className="h-14 md:w-52 w-full">
                     <input
@@ -290,10 +227,10 @@ const Form = () => {
                       onChange={(e) => setPayTerms(e.target.value)}
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
               <div className="flex md:flex-col flex-row items-end md:gap-1 gap-2 mt-5 md:mt-0">
-                <div className="flex md:flex-row flex-col md:items-center gap-5 w-1/2 md:w-max">
+                {/* <div className="flex md:flex-row flex-col md:items-center gap-5 w-1/2 md:w-max">
                   <label htmlFor="">Due Date</label>
                   <div className="h-14 md:w-52 w-full">
                     <input
@@ -314,61 +251,146 @@ const Form = () => {
                       onChange={(e) => setPoNumber(e.target.value)}
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
 
           <div className="flex flex-row mt-10 w-full justify-between py-2 px-5 rounded-md bg-[#132144] text-white">
-            <div>
+            <div className="flex-grow">
               <p>Item</p>
             </div>
-            <div className="flex flex-row gap-10 sm:gap-1 smd:gap-10 lmd:gap-2">
-              <div className="text-center">
-                <p>Qty</p>
-              </div>
-              <div className="mx-1 md:mx-20 text-center">
-                <p>Rate</p>
-              </div>
-              <div className="md:mr-5 text-center">
-                <p>Amount</p>
-              </div>
+            <div className="w-16">
+              <p>Qty</p>
+            </div>
+            <div className="w-24">
+              <p>Bharti</p>
+            </div>
+            <div className="text-center">
+              <p>Weight</p>
+            </div>
+            <div className="w-20 ml-10">
+              <p>Khali kat</p>
+            </div>
+            <div className="w-24 ">
+              <p>Safi Weight</p>
+            </div>
+            <div className="w-16 ml-5">
+              <p>Rate</p>
+            </div>
+            <div className="w-16 ml-4 mr-4  ">
+              <p>Man/50</p>
             </div>
           </div>
           {items.map((item, index) => (
             <div
               key={index}
-              className="flex flex-wrap items-center mt-1 w-full justify-center"
+              className="flex flex-wrap items-center mt-1 justify-center"
             >
+              {/* <select
+                name="ricetype"
+                onChange={(e) => handleInputChange(index, e)}
+                className="h-12 px-3 rounded-l-md border-2 focus:outline-none flex-grow"
+              >
+                <option value="" disabled selected>
+                  Select Rice Type
+                </option>
+                <option value="basmati">Basmati</option>
+                <option value="jasmine">Jasmine</option>
+                <option value="sushi">Sushi Rice</option>
+                <option value="brown">Brown Rice</option>
+                <option value="wild">Wild Rice</option>
+
+              </select> */}
               <input
                 type="text"
                 name="description"
                 value={item.description}
                 onChange={(e) => handleInputChange(index, e)}
-                placeholder="Item Description"
-                className="h-12 px-3 rounded-l-md border-2 focus:outline-none flex-grow w-20" // flex-grow allows it to take remaining space
+                placeholder="Description"
+                className="h-12 px-3 rounded-l-md border-2 focus:outline-none w-20 flex-grow" // flex-grow allows it to take remaining space
               />
               <input
                 type="number"
                 name="quantity"
                 value={item.quantity}
-                onChange={(e) => handleInputChange(index, e)}
-                className="h-12 px-3 w-12 md:w-20 border-2 focus:outline-none" // Adjust width for responsive behavior
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? "" : Math.max(0, e.target.value);
+                  handleInputChange(index, {
+                    target: { name: e.target.name, value },
+                  });
+                }}
+                className="h-12 px-3 border-2 focus:outline-none w-20" // Adjust width for responsive behavior
               />
               <input
                 type="number"
-                name="rate"
-                value={item.rate}
-                onChange={(e) => handleInputChange(index, e)}
-                className="h-12 px-3 w-16 md:w-28 border-2 focus:outline-none" // Adjust width for responsive behavior
+                name="weight"
+                value={item.weight}
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? "" : Math.max(0, e.target.value);
+                  handleInputChange(index, {
+                    target: { name: e.target.name, value },
+                  });
+                }}
+                className="h-12 px-3 border-2 focus:outline-none w-20" // Adjust width for responsive behavior
               />
               <input
                 type="number"
-                name="amount"
-                value={item.amount}
+                name="kgWeight"
+                value={item.kgWeight}
                 readOnly
-                className="h-12 px-3 w-20 md:w-28 rounded-r-md border-2 focus:outline-none bg-gray-100" // Adjust width for responsive behavior
+                className="h-12 px-3 rounded-r-md border-2 focus:outline-none w-28" // Adjust width for responsive behavior
               />
+
+              <input
+                type="number"
+                name="emptyBag"
+                value={item.emptyBag}
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? "" : Math.max(0, e.target.value);
+                  handleInputChange(index, {
+                    target: { name: e.target.name, value },
+                  });
+                }}
+                className="h-12 px-3 rounded-l-md border-2 focus:outline-none w-20"
+              />
+              <input
+                type="number"
+                name="safiWeight"
+                value={item.kgWeight - item.emptyBag} // Calculate the difference
+                readOnly
+                className="h-12 px-3 rounded-l-md border-2 focus:outline-none w-24"
+              />
+
+              <input
+                type="number"
+                name="riceRate"
+                value={item.riceRate}
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? "" : Math.max(0, e.target.value);
+                  handleInputChange(index, {
+                    target: { name: e.target.name, value },
+                  });
+                }}
+                className="h-12 px-3 rounded-l-md border-2 focus:outline-none w-20"
+              />
+              <select
+                name="unit"
+                value={item.unit || ""} // Ensures the select field is controlled
+                onChange={(e) => handleInputChange(index, e)}
+                className="h-12 px-3 rounded-l-md border-2 focus:outline-none"
+              >
+                <option value="" disabled>
+                  Select
+                </option>
+                <option value="40">40 kg</option>
+                <option value="50">50 kg</option>
+              </select>
+
               <div
                 onClick={
                   items.length > 1 ? () => handleDeleteItem(index) : null
@@ -408,7 +430,7 @@ const Form = () => {
               ></textarea>
             </div>
             <div className="md:w-1/2 flex flex-col gap-5">
-              <div className="flex justify-between items-center">
+              {/* <div className="flex justify-between items-center">
                 <label htmlFor="discount">Discount</label>
                 <input
                   type="number"
@@ -416,8 +438,8 @@ const Form = () => {
                   onChange={(e) => setDiscount(e.target.value)}
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
                 />
-              </div>
-              <div className="flex justify-between items-center">
+              </div> */}
+              {/* <div className="flex justify-between items-center">
                 <label htmlFor="percentageDiscount">
                   Percentage Discount (%)
                 </label>
@@ -427,22 +449,43 @@ const Form = () => {
                   onChange={(e) => setPercentageDiscount(e.target.value)}
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
                 />
-              </div>
+              </div> */}
+
               <div className="flex justify-between items-center">
-                <label htmlFor="tax">Tax</label>
+                <label>Salae + Labour</label>
                 <input
                   type="number"
-                  value={tax}
-                  onChange={(e) => setTax(e.target.value)}
+                  value={labourPerBag}
+                  onChange={(e) => setLabourPerBag(e.target.value)}
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
                 />
               </div>
               <div className="flex justify-between items-center">
-                <label htmlFor="shipping">Shipping</label>
+                <label>Vehicle No.</label>
                 <input
                   type="number"
-                  value={shipping}
-                  onChange={(e) => setShipping(e.target.value)}
+                  value={vehicleReg}
+                  onChange={(e) => setvehicleReg(e.target.value)}
+                  className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
+                />
+              </div>
+              <div className="flex justify-between items-center">
+                <label>Transportation Expense</label>
+                <select
+                  value={transpAction}
+                  onChange={(e) => setTranspAction(e.target.value)} // Update the action (+ or -)
+                  className="h-9 rounded-md border-2 focus:outline-none"
+                >
+                  <option value="" disabled>
+                    Select
+                  </option>
+                  <option value="+">Add</option>
+                  <option value="-">Subtract</option>
+                </select>
+                <input
+                  type="number"
+                  value={transpExp}
+                  onChange={(e) => settranspExp(e.target.value)}
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
                 />
               </div>
@@ -468,12 +511,7 @@ const Form = () => {
                 <label htmlFor="total">Total</label>
                 <input
                   type="text"
-                  value={(
-                    calculateSubtotal() +
-                    parseFloat(tax || "0") +
-                    parseFloat(shipping || "0") -
-                    calculateTotalDiscount()
-                  ).toFixed(2)}
+                  value={calculateSubtotal().toFixed(2)}
                   readOnly
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40 bg-gray-100"
                 />
@@ -483,11 +521,7 @@ const Form = () => {
                 <input
                   type="text"
                   value={(
-                    calculateSubtotal() +
-                    parseFloat(tax || "0") +
-                    parseFloat(shipping || "0") -
-                    calculateTotalDiscount() -
-                    parseFloat(amountPaid || "0")
+                    calculateSubtotal() - parseFloat(amountPaid || "0")
                   ).toFixed(2)}
                   readOnly
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40 bg-gray-100"
@@ -496,39 +530,35 @@ const Form = () => {
             </div>
           </div>
           <div className="flex justify-end items-center mt-10">
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="px-2 py-2 bg-white border-2 rounded-md mr-3"
-            >
-              <option value="$">USD</option>
-              <option value="€">EUR</option>
-              <option value="£">GBP</option>
-            </select>
             <button
-              type="submit"
+              type="button"
+              onClick={handleDownload}
               className="px-10 py-3 bg-[#20ad77] text-white rounded-md"
             >
               Save
             </button>
           </div>
-        </form>
-        <button ref={ref}>
-          {/* <PDFDownloadLink
-            document={<Template2 data={formDetails} />}
-            fileName="somename.pdf"
-            className="px-10 py-3 bg-[#20ad77] text-white rounded-md"
-          >
-            {({ blob, url, loading, error }) =>
-              loading ? "Loading document..." : "Download PDF!"
-            }
-          </PDFDownloadLink> */}
-        </button>
+          <button ref={ref}>
+            <PDFDownloadLink
+              document={<Template2 data={formDetails} />}
+              fileName="somename.pdf"
+              className="px-10 py-3 bg-[#20ad77] text-white rounded-md"
+            >
+              {({ blob, url, loading, error }) =>
+                loading ? "Loading document..." : "Download PDF!"
+              }
+            </PDFDownloadLink>
+          </button>
+        </div>
       </div>
-
-      {/* <PDFViewer height={650} width={500}>
-        <Template2 />
-      </PDFViewer> */}
+      {/* Main form div  */}
+      {/* <div>
+        <PDFViewer height={650} width={500}>
+          <Template2 />
+        </PDFViewer>
+      </div> */}
+      {/* pdf viewer arzi div  */}
+      <Footer />
     </div>
   );
 };

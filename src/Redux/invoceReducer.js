@@ -4,35 +4,30 @@ import { createSlice } from "@reduxjs/toolkit";
 const savedFormDetails = localStorage.getItem("formDetails")
   ? JSON.parse(localStorage.getItem("formDetails"))
   : {
-      image: null,
       items: [
         {
           description: "",
+          riceRate: "",
+          safiWeight: "0",
+          emptyBag: "",
           quantity: "1",
-          rate: "",
-          amount: "",
+          weightBag: "0",
+          kgWeight: "0",
         },
       ],
       notes: "",
       terms: "",
-      discount: "",
-      percentageDiscount: "",
-      tax: "",
-      shipping: "",
+      labourPerBag: "",
+      vehicleReg: "",
+      transpExp: "",
       amountPaid: "",
       subtotal: "",
       total: "",
       balanceDue: "",
-      currency: "",
       serialNumb: "",
-      addressFrom: "",
       billTo: "",
-      shipTo: "",
+      phone: "",
       date: "",
-      payterms: "",
-      dueDate: "",
-      poNumber: "",
-      companyName: "",
     };
 
 // Create the slice
