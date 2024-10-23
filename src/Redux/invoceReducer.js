@@ -9,7 +9,7 @@ const savedFormDetails = localStorage.getItem("formDetails")
           description: "",
           riceRate: "",
           safiWeight: "0",
-          emptyBag: "",
+          emptyBag: "0",
           quantity: "1",
           weightBag: "0",
           kgWeight: "0",
@@ -28,6 +28,8 @@ const savedFormDetails = localStorage.getItem("formDetails")
       billTo: "",
       phone: "",
       date: "",
+      addBardana: "",
+      brokery: "",
     };
 
 // Create the slice

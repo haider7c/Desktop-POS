@@ -20,7 +20,7 @@ const Form = () => {
       description: "",
       riceRate: "1",
       safiWeight: "",
-      emptyBag: "",
+      emptyBag: "0",
       quantity: "1",
       weight: "",
       kgWeight: "0",
@@ -49,6 +49,9 @@ const Form = () => {
   const [billTo, setBillTo] = useState(formDetails.billTo || "");
   const [phone, setPhone] = useState(formDetails.phone || "");
   const [date, setDate] = useState(formDetails.date || "");
+  const [addBardana, setAddBardana] = useState(formDetails.addBardana || "");
+  const [brokery, setBrokery] = useState(formDetails.brokery || "");
+  const [brokAction, setBrokAction] = useState(formDetails.brokAction || "");
 
   useEffect(() => {
     localStorage.setItem("items", JSON.stringify(items));
@@ -60,7 +63,7 @@ const Form = () => {
       {
         description: "",
         riceRate: "1",
-        safiWeight: "",
+        safiWeight: "0",
         emptyBag: "",
         quantity: "1",
         weight: "",
@@ -100,11 +103,51 @@ const Form = () => {
       return acc + (safiWeight / unit) * riceRate + quantity * labourPerBag;
     }, 0);
 
-    // Then subtract the transportation expense from the total
+    // Adjust for transportation expense
+    let adjustedTotal = total;
     if (transpAction === "+") {
-      return total + parseFloat(transpExp || "0");
+      adjustedTotal += parseFloat(transpExp || "0");
     } else {
-      return total - parseFloat(transpExp || "0");
+      adjustedTotal -= parseFloat(transpExp || "0");
+    }
+
+    // Add the bardana if applicable
+    if (addBardana >= 0) {
+      adjustedTotal +=
+        addBardana *
+        items.reduce((acc, item) => acc + parseFloat(item.quantity || "0"), 0);
+    }
+
+    return adjustedTotal;
+  };
+  const calculateBrokary = () => {
+    // First, calculate the subtotal for all items
+    const totalBrokary = items.reduce((acc, item) => {
+      const safiWeight = parseFloat(item.kgWeight || "0");
+      console.log(safiWeight);
+      const unit = parseFloat(item.unit || "1"); // Default to 1 to avoid division by 0
+      const riceRate = parseFloat(item.riceRate || "0");
+
+      // Calculate the value for this item (safiWeight / unit) * riceRate
+      return acc + (safiWeight / unit) * riceRate;
+    }, 0);
+
+    let modifiedBrokary;
+
+    // Case for 'man' action
+    if (brokAction === "man") {
+      // Sum the safiWeight for all items
+      const totalSafiWeight = items.reduce((acc, item) => {
+        return acc + parseFloat(item.kgWeight || "0");
+      }, 0);
+
+      modifiedBrokary = (totalSafiWeight / 40) * brokery;
+      return modifiedBrokary;
+    }
+    // Case for percentage action
+    else if (brokAction === "%") {
+      modifiedBrokary = totalBrokary - (totalBrokary / 100) * brokery;
+      return modifiedBrokary;
     }
   };
 
@@ -142,6 +185,8 @@ const Form = () => {
       billTo: billTo,
       phone: phone,
       date: date,
+      addBardana: addBardana,
+      brokery: brokery,
     };
     dispatch(addFormData({ ...formValues }));
     handleClick();
@@ -150,8 +195,8 @@ const Form = () => {
   return (
     <div>
       <NavBar />
-      <div className="h-auto flex lg:flex-row flex-col justify-center mt-10 ml-10">
-        <div className="flex flex-col border-2 px-3 md:px-10 md:py-10 w-full">
+      <div className="flex lg:flex-row flex-col justify-center items-center">
+        <div className="flex flex-col border-2 px-3 md:px-10 md:py-10 w-">
           <div className="flex md:flex-row flex-col justify-between">
             <div>
               <p className="md:text-5xl text-2xl mt-5 md:mt-0">Billing</p>
@@ -256,7 +301,7 @@ const Form = () => {
             </div>
           </div>
 
-          <div className="flex flex-row mt-10 w-full justify-between py-2 px-5 rounded-md bg-[#132144] text-white">
+          <div className="flex flex-row mt-10 w-full justify-between py-2 px-5 rounded-md bg-customGreen text-white">
             <div className="flex-grow">
               <p>Item</p>
             </div>
@@ -340,7 +385,14 @@ const Form = () => {
                 type="number"
                 name="kgWeight"
                 value={item.kgWeight}
-                readOnly
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? "" : Math.max(0, e.target.value);
+                  handleInputChange(index, {
+                    target: { name: e.target.name, value },
+                  });
+                }}
+                // readOnly
                 className="h-12 px-3 rounded-r-md border-2 focus:outline-none w-28" // Adjust width for responsive behavior
               />
 
@@ -409,7 +461,7 @@ const Form = () => {
           <div className="flex justify-start">
             <button
               onClick={handleAddItem}
-              className="px-5 py-2 bg-[#20ad77] text-white rounded-md mt-5"
+              className="px-5 py-2 bg-customGreen text-white rounded-md mt-5"
             >
               Add Item
             </button>
@@ -439,18 +491,44 @@ const Form = () => {
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
                 />
               </div> */}
-              {/* <div className="flex justify-between items-center">
-                <label htmlFor="percentageDiscount">
-                  Percentage Discount (%)
-                </label>
+              <div className="flex justify-between items-center">
+                <label>Add Bardana</label>
                 <input
                   type="number"
-                  value={percentageDiscount}
-                  onChange={(e) => setPercentageDiscount(e.target.value)}
+                  value={addBardana}
+                  onChange={(e) => setAddBardana(e.target.value)}
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
                 />
-              </div> */}
-
+              </div>
+              <div className="flex justify-between items-center gap-3">
+                <label>Brokery</label>
+                <div className="flex flex-row gap-3 items-center">
+                  <select
+                    value={brokAction}
+                    onChange={(e) => setBrokAction(e.target.value)} // Update the action (+ or -)
+                    className="h-9 rounded-md border-2 focus:outline-none"
+                  >
+                    <option value="" disabled>
+                      Select
+                    </option>
+                    <option value="%">Per %</option>
+                    <option value="man">Per 40</option>
+                  </select>
+                  <input
+                    type="number"
+                    value={brokery}
+                    onChange={(e) => setBrokery(e.target.value)}
+                    className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-20"
+                  />
+                  <input
+                    type="number"
+                    value={brokery > 0 ? calculateBrokary() : ""}
+                    // onChange={(e) => setBrokery(e.target.value)}
+                    className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
+                    readOnly
+                  />
+                </div>
+              </div>
               <div className="flex justify-between items-center">
                 <label>Salae + Labour</label>
                 <input
@@ -471,23 +549,25 @@ const Form = () => {
               </div>
               <div className="flex justify-between items-center">
                 <label>Transportation Expense</label>
-                <select
-                  value={transpAction}
-                  onChange={(e) => setTranspAction(e.target.value)} // Update the action (+ or -)
-                  className="h-9 rounded-md border-2 focus:outline-none"
-                >
-                  <option value="" disabled>
-                    Select
-                  </option>
-                  <option value="+">Add</option>
-                  <option value="-">Subtract</option>
-                </select>
-                <input
-                  type="number"
-                  value={transpExp}
-                  onChange={(e) => settranspExp(e.target.value)}
-                  className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
-                />
+                <div className="flex gap-5">
+                  <select
+                    value={transpAction}
+                    onChange={(e) => setTranspAction(e.target.value)} // Update the action (+ or -)
+                    className="h-9 rounded-md border-2 focus:outline-none"
+                  >
+                    <option value="" disabled>
+                      Select
+                    </option>
+                    <option value="+">Add</option>
+                    <option value="-">Subtract</option>
+                  </select>
+                  <input
+                    type="number"
+                    value={transpExp}
+                    onChange={(e) => settranspExp(e.target.value)}
+                    className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
+                  />
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <label htmlFor="amountPaid">Amount Paid</label>
@@ -498,7 +578,7 @@ const Form = () => {
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40"
                 />
               </div>
-              <div className="flex justify-between items-center">
+              {/* <div className="flex justify-between items-center">
                 <label htmlFor="subtotal">Subtotal</label>
                 <input
                   type="text"
@@ -506,12 +586,16 @@ const Form = () => {
                   readOnly
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40 bg-gray-100"
                 />
-              </div>
+              </div> */}
               <div className="flex justify-between items-center">
                 <label htmlFor="total">Total</label>
                 <input
                   type="text"
-                  value={calculateSubtotal().toFixed(2)}
+                  value={
+                    brokery > 0
+                      ? calculateBrokary().toFixed(2)
+                      : calculateSubtotal().toFixed(2)
+                  }
                   readOnly
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40 bg-gray-100"
                 />
@@ -520,9 +604,15 @@ const Form = () => {
                 <label htmlFor="balanceDue">Balance Due</label>
                 <input
                   type="text"
-                  value={(
-                    calculateSubtotal() - parseFloat(amountPaid || "0")
-                  ).toFixed(2)}
+                  value={
+                    brokery > 0
+                      ? (
+                          calculateBrokary() - parseFloat(amountPaid || "0")
+                        ).toFixed(2)
+                      : (
+                          calculateSubtotal() - parseFloat(amountPaid || "0")
+                        ).toFixed(2)
+                  }
                   readOnly
                   className="rounded-md border-2 focus:outline-none focus:shadow-md h-10 px-3 w-40 bg-gray-100"
                 />
@@ -533,7 +623,7 @@ const Form = () => {
             <button
               type="button"
               onClick={handleDownload}
-              className="px-10 py-3 bg-[#20ad77] text-white rounded-md"
+              className="px-10 py-3 bg-customGreen text-white rounded-md"
             >
               Save
             </button>
@@ -542,7 +632,7 @@ const Form = () => {
             <PDFDownloadLink
               document={<Template2 data={formDetails} />}
               fileName="somename.pdf"
-              className="px-10 py-3 bg-[#20ad77] text-white rounded-md"
+              className="px-10 py-3 bg-customGreen text-white rounded-md"
             >
               {({ blob, url, loading, error }) =>
                 loading ? "Loading document..." : "Download PDF!"

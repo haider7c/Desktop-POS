@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import { RxHamburgerMenu } from "react-icons/rx";
 import { RxCross2 } from "react-icons/rx";
-// import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
+import { useNavigate } from "react-router-dom";
 
 const NavBar = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const menuItems = [
+    {
+      name: "Home",
+      linnk: "/home",
+    },
     {
       name: "Help",
       linnk: "/help",
@@ -27,11 +32,11 @@ const NavBar = () => {
       <div className="flex flex-row justify-between pr-8 pl-8 items-center pt-3 pb-3 shadow-sm ">
         <div className="flex flex-row gap-14 items-center">
           <img
-            src="https://cdn.invoice-generator.com/img/logo.1457551a.svg"
+            src={logo}
             alt=""
             width={200}
-            className="hover:cursor-pointer"
-            // onClick={() => navigate("/")}
+            className="hover:cursor-pointer h-16"
+            onClick={() => navigate("/")}
           />
           <div className="hidden lg:flex flex-row gap-10 ">
             {menuItems.map((item, index) => (

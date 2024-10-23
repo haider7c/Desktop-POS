@@ -1,13 +1,14 @@
 import React from "react";
 import { FcGoogle } from "react-icons/fc";
-// import NavBar from "../Components/NavBar";
-// import { useNavigate } from "react-router-dom";
+import NavBar from "../components/NavBar";
+import Footer from "../components/Footer";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   return (
     <div>
-      {/* <NavBar /> */}
+      <NavBar />
       <div className="flex flex-col items-center mx-5 p-5">
         {/* <img
           src="https://cdn.invoice-generator.com/img/logo.1457551a.svg"
@@ -34,15 +35,18 @@ const Login = () => {
               </div>
               <input type="text" className="py-2 border-2 rounded-md px-2" />
             </div>
-            <button className="bg-[#20ad77] w-full text-white py-3 rounded-md mt-10">
+            <button
+              className="bg-[#20ad77] w-full text-white py-3 rounded-md mt-10"
+              onClick={() => navigate("/home")}
+            >
               Sign In
             </button>
           </form>
-          <div className="flex items-center mt-5 gap-2 px-5 py-2 rounded-md border-2 hover:cursor-pointer">
+          {/* <div className="flex items-center mt-5 gap-2 px-5 py-2 rounded-md border-2 hover:cursor-pointer">
             <FcGoogle size={30} />
             <p>Sign in with Google</p>
-          </div>
-          <div className="flex mt-5 items-center gap-1">
+          </div> */}
+          {/* <div className="flex mt-5 items-center gap-1">
             <p>Don't have an account yet?</p>
             <button
               className="text-green-800"
@@ -50,9 +54,10 @@ const Login = () => {
             >
               Sign Up
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
